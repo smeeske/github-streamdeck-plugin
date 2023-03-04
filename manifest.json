@@ -13,12 +13,12 @@
         }
       ], 
       "Tooltip": "Retrieve open PR count for github.deere.com repo.",
-      "UUID": "com.qauwvu9.github.pr.action",
+      "UUID": "com.smeeske.github.pr.action",
       "UserTitleEnabled": false
     }
   ], 
   "SDKVersion": 2,
-  "Author": "QAUWVU9",
+  "Author": "smeeske",
   "CodePath": "index.html", 
   "PropertyInspectorPath": "propertyinspector/index.html", 
   "Description": "Actions for interacting with github.deere.com.",

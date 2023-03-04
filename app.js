@@ -10,14 +10,14 @@ $SD.on('connected', (jsonObj) => connected(jsonObj));
 
 function connected(jsn) {
     // Subscribe to the willAppear and other events
-    $SD.on('com.qauwvu9.github.pr.action.willAppear', (jsonObj) => action.onWillAppear(jsonObj));
-    $SD.on('com.qauwvu9.github.pr.action.keyUp', (jsonObj) => action.onKeyUp(jsonObj));
-    $SD.on('com.qauwvu9.github.pr.action.sendToPlugin', (jsonObj) => action.onSendToPlugin(jsonObj));
-    $SD.on('com.qauwvu9.github.pr.action.didReceiveSettings', (jsonObj) => action.onDidReceiveSettings(jsonObj));
-    $SD.on('com.qauwvu9.github.pr.action.propertyInspectorDidAppear', (jsonObj) => {
+    $SD.on('com.smeeske.github.pr.action.willAppear', (jsonObj) => action.onWillAppear(jsonObj));
+    $SD.on('com.smeeske.github.pr.action.keyUp', (jsonObj) => action.onKeyUp(jsonObj));
+    $SD.on('com.smeeske.github.pr.action.sendToPlugin', (jsonObj) => action.onSendToPlugin(jsonObj));
+    $SD.on('com.smeeske.github.pr.action.didReceiveSettings', (jsonObj) => action.onDidReceiveSettings(jsonObj));
+    $SD.on('com.smeeske.github.pr.action.propertyInspectorDidAppear', (jsonObj) => {
         console.log('%c%s', 'color: white; background: black; font-size: 13px;', '[app.js]propertyInspectorDidAppear:');
     });
-    $SD.on('com.qauwvu9.github.pr.action.propertyInspectorDidDisappear', (jsonObj) => {
+    $SD.on('com.smeeske.github.pr.action.propertyInspectorDidDisappear', (jsonObj) => {
         console.log('%c%s', 'color: white; background: red; font-size: 13px;', '[app.js]propertyInspectorDidDisappear:');
     });
 };

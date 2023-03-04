@@ -2,7 +2,7 @@
   "Description": "Actions for interacting with github.deere.com.",
   "Name": "github.deere.com Actions",
   "Category": "Development",
-  "com.qauwvu9.github.pr.action": {
+  "com.smeeske.github.pr.action": {
     "Name": "Open PRs",
     "Tooltip": "Retrieve open PR count for github.deere.com repo."
   },
