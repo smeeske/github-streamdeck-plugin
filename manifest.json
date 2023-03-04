@@ -1,0 +1,43 @@
+{
+  "Actions": [
+    {
+      "Icon": "action/images/actionimage", 
+      "Name": "Open PRs",
+      "States": [
+        {
+          "Image": "action/images/action",
+          "TitleAlignment": "middle",
+          "FontFamily": "Tahoma",
+          "TitleColor": "#FFFFFF",
+          "FontSize": 18
+        }
+      ], 
+      "Tooltip": "Retrieve open PR count for github.deere.com repo.",
+      "UUID": "com.qauwvu9.github.pr.action",
+      "UserTitleEnabled": false
+    }
+  ], 
+  "SDKVersion": 2,
+  "Author": "QAUWVU9",
+  "CodePath": "index.html", 
+  "PropertyInspectorPath": "propertyinspector/index.html", 
+  "Description": "Actions for interacting with github.deere.com.",
+  "Name": "github.deere.com Actions",
+  "Icon": "action/images/action", 
+  "URL": "https://www.elgato.com/en/gaming/stream-deck", 
+  "Version": "1.0.1",
+  "OS": [
+    {
+        "Platform": "mac", 
+        "MinimumVersion" : "10.11"
+    },
+    {
+        "Platform": "windows", 
+        "MinimumVersion" : "10"
+    }
+  ],
+  "Software": 
+    {
+        "MinimumVersion" : "4.1"
+  }
+}
