@@ -1,19 +1,35 @@
 {
   "Actions": [
     {
-      "Icon": "action/images/actionimage", 
+      "Icon": "action/images/open-prs/actionimage",
       "Name": "Open PRs",
       "States": [
         {
-          "Image": "action/images/action",
+          "Image": "action/images/open-prs/action",
           "TitleAlignment": "middle",
           "FontFamily": "Tahoma",
           "TitleColor": "#FFFFFF",
           "FontSize": 18
         }
       ], 
-      "Tooltip": "Retrieve open PR count for github.deere.com repo.",
+      "Tooltip": "Retrieve open PR count for a github repo.",
       "UUID": "com.smeeske.github.pr.action",
+      "UserTitleEnabled": false
+    },
+    {
+      "Icon": "action/images/open-isuses/actionimage",
+      "Name": "Open Issues",
+      "States": [
+        {
+          "Image": "action/images/open-issues/action",
+          "TitleAlignment": "middle",
+          "FontFamily": "Tahoma",
+          "TitleColor": "#FFFFFF",
+          "FontSize": 18
+        }
+      ],
+      "Tooltip": "Retrieve open issue count for a github repo.",
+      "UUID": "com.smeeske.github.issues.action",
       "UserTitleEnabled": false
     }
   ], 
@@ -21,10 +37,10 @@
   "Author": "smeeske",
   "CodePath": "index.html", 
   "PropertyInspectorPath": "propertyinspector/index.html", 
-  "Description": "Actions for interacting with github.deere.com.",
-  "Name": "github.deere.com Actions",
-  "Icon": "action/images/action", 
-  "URL": "https://www.elgato.com/en/gaming/stream-deck", 
+  "Description": "Actions for interacting with Enterprise github.",
+  "Name": "Github Actions",
+  "Icon": "action/images/open-prs/action",
+  "URL": "http://github.com/smeeske/github-streamdeck-plugin",
   "Version": "1.0.1",
   "OS": [
     {
