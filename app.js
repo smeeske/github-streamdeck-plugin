@@ -32,9 +32,15 @@ const action = {
     settings:{},
     onDidReceiveSettings: function(jsn) {
         console.log('%c%s', 'color: white; background: red; font-size: 15px;', '[app.js]onDidReceiveSettings:');
+        this.doSomeThing(this.settings, 'onDidReceiveSettings', 'orange');
 
         this.settings = Utils.getProp(jsn, 'payload.settings', {});
-        this.doSomeThing(this.settings, 'onDidReceiveSettings', 'orange');
+
+        // clear the existing timer (it will be reset at the updated interval)
+        clearInterval(periodInterval);
+        timerFlag = false;
+
+        // retrieve the updated PR count.
         this.updateOpenPRCount(jsn);
     },
 
@@ -46,7 +52,6 @@ const action = {
      */
 
     onWillAppear: function (jsn) {
-        console.log("You can cache your settings in 'onWillAppear'", jsn.payload.settings);
         /**
          * The willAppear event carries your saved settings (if any). You can use these settings
          * to setup your plugin or save the settings for later use. 
@@ -99,8 +104,17 @@ const action = {
             console.log("Set Count", pulls);
             $SD.api.setTitle(jsn.context, pulls);
 
+            //refresh the number of open PRs at the requested interval
             if(!timerFlag) {
-                periodInterval = setInterval(() => this.updateOpenPRCount(jsn), 15000);
+                const refreshintervalmins = this.settings.refreshinterval;
+
+                // convert refresh interval (in minutes) to milliseconds.  Default to 10 mins.
+                let refreshintervalms = 600000;
+                if(refreshintervalmins && parseInt(refreshintervalmins) > 0) {
+                    refreshintervalms = parseInt(refreshintervalmins) * 60 * 1000;
+                }
+
+                periodInterval = setInterval(() => this.updateOpenPRCount(jsn), refreshintervalms);
                 timerFlag = true;
             }
         });
@@ -111,8 +125,6 @@ const action = {
 
     sendRequest: function (context, url, callback) {
         const githubtoken = this.settings.githubtoken;
-
-        console.log("githubtoken:", githubtoken);
 
         xhr.open('GET', url, true);
         xhr.setRequestHeader('Content-Type', `application/vnd.github+json`);
@@ -128,27 +140,16 @@ const action = {
             if (xhr.status === 200) {
                 callback(xhr);
             } else {
-                console.log("not 200");
                 console.log(xhr.response);
-                $SD.api.setTitle(context, "Err!");
-
+                $SD.api.setTitle(context, "ERR!");
             }
-
-
-
-//                self.setState(context, 4).then(() => {
-//                    self.setRepoName(context, settings).then(() =>
-//                        self.setLastError(context, settings, xhr.response));
-//                });
         };
 
         xhr.onerror = function (e) {
             console.log("onerror!");
-//            this.setState(context, 2).then(() =>
-                $SD.api.setTitle(context, "SETTINGS!").then(() =>
-                    this.setLastError(context, settings, xhr.response));
-//                    );
+            $SD.api.setTitle(context, "SETTINGS!");
         };
+
     },
 
     openPRURL: function(jsn) {
