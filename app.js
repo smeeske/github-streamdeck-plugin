@@ -1,4 +1,7 @@
 let xhr = new XMLHttpRequest();
+let periodInterval;
+let timerFlag = false;
+
 
 /**
  * The 'connected' event is sent to your plugin, after the plugin's instance
@@ -11,6 +14,7 @@ $SD.on('connected', (jsonObj) => connected(jsonObj));
 function connected(jsn) {
     // Subscribe to the willAppear and other events
     $SD.on('com.smeeske.github.pr.action.willAppear', (jsonObj) => action.onWillAppear(jsonObj));
+    $SD.on('com.smeeske.github.pr.action.willDisappear', (jsonObj) => action.onWillDisappear(jsonObj));
     $SD.on('com.smeeske.github.pr.action.keyUp', (jsonObj) => action.onKeyUp(jsonObj));
     $SD.on('com.smeeske.github.pr.action.sendToPlugin', (jsonObj) => action.onSendToPlugin(jsonObj));
     $SD.on('com.smeeske.github.pr.action.didReceiveSettings', (jsonObj) => action.onDidReceiveSettings(jsonObj));
@@ -56,6 +60,17 @@ const action = {
         this.updateOpenPRCount(jsn);
     },
 
+
+    /**
+     * When an instance of an action ceases to be displayed on Stream Deck, for example, when
+     * switching profiles or folders, the plugin will receive a willDisappear event.
+     */
+    onWillDisappear: function (jsn) {
+
+        clearInterval(periodInterval);
+        timerFlag = false;
+    },
+
     onKeyUp: function (jsn) {
         this.doSomeThing(jsn, 'onKeyUp', 'green');
 
@@ -69,27 +84,42 @@ const action = {
         // Retrieve GitHub API Connection Parameters from Settings
         const baseapiurl = this.settings.baseapiurl;
         const userororg = this.settings.userororg;
-        const reponame = this.settings. repo
+        const reponame = this.settings.repo
 
         // Build the URL for the request
         const url = `${baseapiurl}/repos/${userororg}/${reponame}/pulls?state=open`;
 
         // Make the API call and process the response
         this.sendRequest(jsn.context, url, (xhr) => {
+            //parse the response
             let responseJson = JSON.parse(xhr.response);
-
             var pulls = Object.keys(responseJson).length
 
+            //update the text
             console.log("Set Count", pulls);
-
             $SD.api.setTitle(jsn.context, pulls);
+
+            if(!timerFlag) {
+                periodInterval = setInterval(() => this.updateOpenPRCount(jsn), 15000);
+                timerFlag = true;
+            }
         });
+
+
+
     },
 
     sendRequest: function (context, url, callback) {
+        const githubtoken = this.settings.githubtoken;
+
+        console.log("githubtoken:", githubtoken);
+
         xhr.open('GET', url, true);
         xhr.setRequestHeader('Content-Type', `application/vnd.github+json`);
-//        xhr.setRequestHeader('Authorization', `Bearer ${githubToken}`);
+
+        if(githubtoken && githubtoken != '') {
+            xhr.setRequestHeader('Authorization', `Bearer ${githubtoken}`);
+        }
         xhr.send();
 
         let self = this;
@@ -99,7 +129,13 @@ const action = {
                 callback(xhr);
             } else {
                 console.log("not 200");
+                console.log(xhr.response);
+                $SD.api.setTitle(context, "Err!");
+
             }
+
+
+
 //                self.setState(context, 4).then(() => {
 //                    self.setRepoName(context, settings).then(() =>
 //                        self.setLastError(context, settings, xhr.response));
@@ -109,8 +145,9 @@ const action = {
         xhr.onerror = function (e) {
             console.log("onerror!");
 //            this.setState(context, 2).then(() =>
-//                this.setTitle(context, 'SETTINGS!').then(() =>
-//                    this.setLastError(context, settings, xhr.response)));
+                $SD.api.setTitle(context, "SETTINGS!").then(() =>
+                    this.setLastError(context, settings, xhr.response));
+//                    );
         };
     },
 
@@ -163,7 +200,6 @@ const action = {
 
     doSomeThing: function(inJsonData, caller, tagColor) {
         console.log('%c%s', `color: white; background: ${tagColor || 'grey'}; font-size: 15px;`, `[app.js]doSomeThing from: ${caller}`);
-        // console.log(inJsonData);
     }, 
 
 
