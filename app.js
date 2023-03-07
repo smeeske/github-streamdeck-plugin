@@ -308,9 +308,6 @@ const openIssuesAction = {
                 let pullsResponseJson = JSON.parse(xhr.response)
                 var pulls = Object.keys(pullsResponseJson).length;
 
-                console.log("issues", issues);
-                console.log("pulls", pulls);
-
                 var actualIssues = issues - pulls;
 
                 //update the text
