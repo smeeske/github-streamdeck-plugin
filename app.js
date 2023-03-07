@@ -42,19 +42,20 @@ function connected(jsn) {
 
 const openPRsAction = {
 
-    periodInterval: null,
-    timerFlag: false,
-    settings:{},
+    periodInterval: {},
+    timerFlag: {},
+    //settings:{},
 
     onDidReceiveSettings: function(jsn) {
         console.log('%c%s', 'color: white; background: red; font-size: 15px;', '[app.js/openPRsAction]onDidReceiveSettings:');
-        this.doSomeThing(this.settings, 'onDidReceiveSettings', 'orange');
+        this.doSomeThing(jsn.payload.settings, 'onDidReceiveSettings', 'orange');
 
-        this.settings = Utils.getProp(jsn, 'payload.settings', {});
+        //this.settings = Utils.getProp(jsn, 'payload.settings', {});
 
         // clear the existing timer (it will be reset at the updated interval)
-        clearInterval(this.periodInterval);
-        this.timerFlag = false;
+        if(this.periodInterval[jsn.context] != null)
+            clearInterval(this.periodInterval[jsn.context]);
+        this.timerFlag[jsn.context] = false;
 
         // retrieve the updated PR count.
         this.updateOpenPRCount(jsn);
@@ -78,7 +79,7 @@ const openPRsAction = {
          * $SD.api.getSettings(jsn.context);
         */
 
-        this.settings = jsn.payload.settings;
+        //this.settings = jsn.payload.settings;
         this.updateOpenPRCount(jsn);
     },
 
@@ -89,8 +90,8 @@ const openPRsAction = {
      */
     onWillDisappear: function (jsn) {
 
-        clearInterval(this.periodInterval);
-        this.timerFlag = false;
+        clearInterval(this.periodInterval[jsn.context]);
+        this.timerFlag[jsn.context] = false;
     },
 
     onKeyUp: function (jsn) {
@@ -104,15 +105,15 @@ const openPRsAction = {
 
     updateOpenPRCount: function(jsn) {
         // Retrieve GitHub API Connection Parameters from Settings
-        const baseapiurl = this.settings.baseapiurl;
-        const userororg = this.settings.userororg;
-        const reponame = this.settings.repo
+        const baseapiurl = jsn.payload.settings.baseapiurl;
+        const userororg = jsn.payload.settings.userororg;
+        const reponame = jsn.payload.settings.repo
 
         // Build the URL for the request
         const url = `${baseapiurl}/repos/${userororg}/${reponame}/pulls?state=open`;
 
         // Make the API call and process the response
-        this.sendRequest(jsn.context, url, (xhr) => {
+        this.sendRequest(jsn, url, (xhr) => {
             //parse the response
             let responseJson = JSON.parse(xhr.response);
             var pulls = Object.keys(responseJson).length
@@ -122,8 +123,8 @@ const openPRsAction = {
             $SD.api.setTitle(jsn.context, pulls);
 
             //refresh the number of open PRs at the requested interval
-            if(!this.timerFlag) {
-                const refreshintervalmins = this.settings.refreshinterval;
+            if(this.timerFlag[jsn.context] == null || this.timerFlag[jsn.context] == false) {
+                const refreshintervalmins = jsn.payload.settings.refreshinterval;
 
                 // convert refresh interval (in minutes) to milliseconds.  Default to 10 mins.
                 let refreshintervalms = 600000;
@@ -131,8 +132,8 @@ const openPRsAction = {
                     refreshintervalms = parseInt(refreshintervalmins) * 60 * 1000;
                 }
 
-                this.periodInterval = setInterval(() => this.updateOpenPRCount(jsn), refreshintervalms);
-                this.timerFlag = true;
+                this.periodInterval[jsn.context] = setInterval(() => this.updateOpenPRCount(jsn), refreshintervalms);
+                this.timerFlag[jsn.context] = true;
             }
         });
 
@@ -140,13 +141,13 @@ const openPRsAction = {
 
     },
 
-    sendRequest: function (context, url, callback) {
+    sendRequest: function (jsn, url, callback) {
         const xhr = new XMLHttpRequest();
 
         xhr.open('GET', url, true);
         xhr.setRequestHeader('Content-Type', `application/vnd.github+json`);
         
-        const githubtoken = this.settings.githubtoken;
+        const githubtoken = jsn.payload.settings.githubtoken;
         if(githubtoken && githubtoken != '') {
             xhr.setRequestHeader('Authorization', `Bearer ${githubtoken}`);
         }
@@ -158,22 +159,22 @@ const openPRsAction = {
                 callback(xhr);
             } else {
                 console.log(xhr.response);
-                $SD.api.setTitle(context, "ERR!");
+                $SD.api.setTitle(jsn.context, "ERR!");
             }
         };
 
         xhr.onerror = function (e) {
             console.log("onerror!");
-            $SD.api.setTitle(context, "SETTINGS!");
+            $SD.api.setTitle(jsn.context, "SETTINGS!");
         };
 
     },
 
     openPRURL: function(jsn) {
         // Retrieve GitHub API Connection Parameters from Settings
-        const githuburl = this.settings.githuburl;
-        const userororg = this.settings.userororg;
-        const reponame = this.settings. repo
+        const githuburl = jsn.payload.settings.githuburl;
+        const userororg = jsn.payload.settings.userororg;
+        const reponame = jsn.payload.settings. repo
 
         // Build the URL for the request
         const url = `${githuburl}/${userororg}/${reponame}/pulls`;
@@ -203,9 +204,9 @@ const openPRsAction = {
         console.log('saveSettings:', jsn);
         if (sdpi_collection.hasOwnProperty('key') && sdpi_collection.key != '') {
             if (sdpi_collection.value && sdpi_collection.value !== undefined) {
-                this.settings[sdpi_collection.key] = sdpi_collection.value;
-                console.log('setSettings....', this.settings);
-                $SD.api.setSettings(jsn.context, this.settings);
+                jsn.payload.settings[sdpi_collection.key] = sdpi_collection.value;
+                console.log('setSettings....', jsn.payload.settings);
+                $SD.api.setSettings(jsn.context, jsn.payload.settings);
             }
         }
     },
@@ -225,20 +226,21 @@ const openPRsAction = {
 
 const openIssuesAction = {
 
-    periodInterval: null,
-    timerFlag: false,
-    settings:{},
+    periodInterval: {},
+    timerFlag: {},
+    //settings:{},
 
 
     onDidReceiveSettings: function(jsn) {
         console.log('%c%s', 'color: white; background: red; font-size: 15px;', '[app.js/openIssuesAction]onDidReceiveSettings:');
-        this.doSomeThing(this.settings, 'onDidReceiveSettings', 'orange');
+        this.doSomeThing(jsn.payload.settings, 'onDidReceiveSettings', 'orange');
 
-        this.settings = Utils.getProp(jsn, 'payload.settings', {});
+        //this.settings = Utils.getProp(jsn, 'payload.settings', {});
 
         // clear the existing timer (it will be reset at the updated interval)
-        clearInterval(this.periodInterval);
-        this.timerFlag = false;
+        if(this.periodInterval[jsn.context] != null)
+            clearInterval(this.periodInterval[jsn.context]);
+        this.timerFlag[jsn.context] = false;
 
         // retrieve the updated PR count.
         this.updateOpenIssuesCount(jsn);
@@ -261,7 +263,7 @@ const openIssuesAction = {
          *
          * $SD.api.getSettings(jsn.context);
         */
-        this.settings = jsn.payload.settings;
+        //this.settings = jsn.payload.settings;
         this.updateOpenIssuesCount(jsn);
     },
 
@@ -272,8 +274,8 @@ const openIssuesAction = {
      */
     onWillDisappear: function (jsn) {
 
-        clearInterval(this.periodInterval);
-        this.timerFlag = false;
+        clearInterval(this.periodInterval[jsn.context]);
+        this.timerFlag[jsn.context] = false;
     },
 
     onKeyUp: function (jsn) {
@@ -287,26 +289,38 @@ const openIssuesAction = {
 
     updateOpenIssuesCount: function(jsn) {
         // Retrieve GitHub API Connection Parameters from Settings
-        const baseapiurl = this.settings.baseapiurl;
-        const userororg = this.settings.userororg;
-        const reponame = this.settings.repo
+        const baseapiurl = jsn.payload.settings.baseapiurl;
+        const userororg = jsn.payload.settings.userororg;
+        const reponame = jsn.payload.settings.repo
 
         // Build the URL for the request
         const url = `${baseapiurl}/repos/${userororg}/${reponame}/issues?state=open`;
 
         // Make the API call and process the response
-        this.sendRequest(jsn.context, url, (xhr) => {
+        this.sendRequest(jsn, url, (xhr) => {
             //parse the response
             let responseJson = JSON.parse(xhr.response);
-            var issues = Object.keys(responseJson).length
+            var issues = Object.keys(responseJson).length;
 
-            //update the text
-            console.log("Set Issue Count", issues);
-            $SD.api.setTitle(jsn.context, issues);
+            const pull_request_url = `${baseapiurl}/repos/${userororg}/${reponame}/pulls?state=open`;
+
+             this.sendRequest(jsn, pull_request_url, (xhr) => {
+                let pullsResponseJson = JSON.parse(xhr.response)
+                var pulls = Object.keys(pullsResponseJson).length;
+
+                console.log("issues", issues);
+                console.log("pulls", pulls);
+
+                var actualIssues = issues - pulls;
+
+                //update the text
+                console.log("Set Issue Count", actualIssues);
+                $SD.api.setTitle(jsn.context, actualIssues);
+             });
 
             //refresh the number of open PRs at the requested interval
-            if(!this.timerFlag) {
-                const refreshintervalmins = this.settings.refreshinterval;
+            if(this.timerFlag[jsn.context] == null || this.timerFlag[jsn.context] == false) {
+                const refreshintervalmins = jsn.payload.settings.refreshinterval;
 
                 // convert refresh interval (in minutes) to milliseconds.  Default to 10 mins.
                 let refreshintervalms = 600000;
@@ -314,8 +328,8 @@ const openIssuesAction = {
                     refreshintervalms = parseInt(refreshintervalmins) * 60 * 1000;
                 }
 
-                this.periodInterval = setInterval(() => this.updateOpenIssuesCount(jsn), refreshintervalms);
-                this.timerFlag = true;
+                this.periodInterval[jsn.context] = setInterval(() => this.updateOpenIssuesCount(jsn), refreshintervalms);
+                this.timerFlag[jsn.context] = true;
             }
         });
 
@@ -323,13 +337,13 @@ const openIssuesAction = {
 
     },
 
-    sendRequest: function (context, url, callback) {
+    sendRequest: function (jsn, url, callback) {
         const xhr = new XMLHttpRequest();
 
         xhr.open('GET', url, true);
         xhr.setRequestHeader('Content-Type', `application/vnd.github+json`);
 
-        const githubtoken = this.settings.githubtoken;
+        const githubtoken = jsn.payload.settings.githubtoken;
         if(githubtoken && githubtoken != '') {
             xhr.setRequestHeader('Authorization', `Bearer ${githubtoken}`);
         }
@@ -342,22 +356,22 @@ const openIssuesAction = {
                 callback(xhr);
             } else {
                 console.log(xhr.response);
-                $SD.api.setTitle(context, "ERR!");
+                $SD.api.setTitle(jsn.context, "ERR!");
             }
         };
 
         xhr.onerror = function (e) {
             console.log("onerror!");
-            $SD.api.setTitle(context, "SETTINGS!");
+            $SD.api.setTitle(jsn.context, "SETTINGS!");
         };
 
     },
 
     openIssuesURL: function(jsn) {
         // Retrieve GitHub API Connection Parameters from Settings
-        const githuburl = this.settings.githuburl;
-        const userororg = this.settings.userororg;
-        const reponame = this.settings. repo
+        const githuburl = jsn.payload.settings.githuburl;
+        const userororg = jsn.payload.settings.userororg;
+        const reponame = jsn.payload.settings. repo
 
         // Build the URL for the request
         const url = `${githuburl}/${userororg}/${reponame}/issues`;
@@ -387,9 +401,9 @@ const openIssuesAction = {
         console.log('saveSettings:', jsn);
         if (sdpi_collection.hasOwnProperty('key') && sdpi_collection.key != '') {
             if (sdpi_collection.value && sdpi_collection.value !== undefined) {
-                this.settings[sdpi_collection.key] = sdpi_collection.value;
-                console.log('setSettings....', this.settings);
-                $SD.api.setSettings(jsn.context, this.settings);
+                jsn.payload.settings[sdpi_collection.key] = sdpi_collection.value;
+                console.log('setSettings....', jsn.payload.settings);
+                $SD.api.setSettings(jsn.context, jsn.payload.settings);
             }
         }
     },
